@@ -9,17 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-{
+    public function up()
+    {
     Schema::create('barangs', function (Blueprint $table) {
         $table->id();
         $table->string('name');
-        $table->integer('price');
+        $table->decimal('price', 10, 2);
         $table->integer('stock');
-        $table->string('image')->nullable();
+        $table->string('image')->nullable(); // Kolom untuk menyimpan path gambar
         $table->timestamps();
     });
-}
+    }
+
 
 
     /**

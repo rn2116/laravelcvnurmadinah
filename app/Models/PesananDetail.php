@@ -7,23 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class PesananDetail extends Model
 {
-    use HasFactory;
-
-    protected $fillable = ['pesanan_id', 'barang_id', 'quantity', 'unit', 'price'];
-
-    public function pesanan()
-    {
-        return $this->belongsTo(Pesanan::class);
-    }
+    protected $fillable = ['pesanan_id', 'barang_id', 'nama_barang', 'harga', 'jumlah', 'satuan'];
 
     public function barang()
     {
         return $this->belongsTo(Barang::class);
     }
 
-    public function pemesanan()
+    public function pesanan()
     {
-        return $this->belongsTo(Pemesanan::class, 'pesanan_id');
+        return $this->belongsTo(Pesanan::class);
     }
-
 }

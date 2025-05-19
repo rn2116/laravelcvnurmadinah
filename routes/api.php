@@ -25,5 +25,9 @@ Route::middleware([Cors::class])->group(function () {
     Route::put('/pesanan/{id}/status', [PesananController::class, 'updateStatus']);
     Route::get('/pesanan/{id}/nota', [PesananController::class, 'showNota']);
     Route::get('/nota/{id}', [NotaController::class, 'show']);
+    Route::post('/barang', [BarangController::class, 'store']);
+    Route::post('/barang/{id}', [BarangController::class, 'update']); // atau patch/put sesuai kebutuhan
+    Route::get('/barang', [BarangController::class, 'index']);
+    Route::get('/pesanan/{id}', [PesananController::class, 'show']);
 });
 

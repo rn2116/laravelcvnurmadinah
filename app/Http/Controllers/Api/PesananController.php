@@ -10,10 +10,16 @@ use Illuminate\Support\Facades\DB;
 
 class PesananController extends Controller
 {
+    public function index(Request $request)
+    {
+        $perPage = $request->get('per_page', 10);
+        $pesanan = Pesanan::with('details')->paginate($perPage);
+
+        return response()->json($pesanan);
+    }
 
     public function store(Request $request)
     {
-        // Validasi input
         $validated = $request->validate([
             'nama_toko' => 'required|string',
             'alamat' => 'required|string',
@@ -26,10 +32,9 @@ class PesananController extends Controller
             'orders.*.unit' => 'required|string',
         ]);
 
-        DB::beginTransaction(); // Mulai transaksi
+        DB::beginTransaction();
 
         try {
-            // Simpan pesanan ke tabel pesanan
             $pesanan = Pesanan::create([
                 'nama_toko' => $validated['nama_toko'],
                 'alamat' => $validated['alamat'],
@@ -37,53 +42,42 @@ class PesananController extends Controller
                 'orders' => json_encode($validated['orders']),
             ]);
 
-            // Kurangi stok untuk setiap barang yang dipesan
             foreach ($validated['orders'] as $order) {
-                $barang = Barang::find($order['id']);
+                $barang = Barang::findOrFail($order['id']);
 
-                if ($barang) {
-                    // Kurangi stok
-                    $barang->decrement('stock', $order['quantity']);
-
-                    // Opsional: kalau mau cek jangan sampai stok minus
-                    if ($barang->stock < 0) {
-                        // Rollback kalau ada masalah
-                        DB::rollBack();
-                        return response()->json([
-                            'message' => "Stok barang '{$barang->name}' tidak cukup.",
-                        ], 400);
-                    }
+                if ($barang->stock < $order['quantity']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => "Stok barang '{$barang->name}' tidak cukup.",
+                    ], 400);
                 }
+
+                $barang->decrement('stock', $order['quantity']);
+
+                $pesanan->details()->create([
+                    'barang_id' => $barang->id,
+                    'nama_barang' => $order['name'],
+                    'harga' => $order['price'],
+                    'jumlah' => $order['quantity'],
+                    'satuan' => $order['unit'],
+                ]);
             }
 
-            DB::commit(); // Commit transaksi
-            return response()->json([
-                'message' => 'Pesanan berhasil diterima!',
-                'pesanan_id' => $pesanan->id,
-                'data' => $validated
-            ], 200);
+            DB::commit();
 
-        } catch (\Exception $e) {
-            DB::rollBack(); // Rollback kalau ada error
             return response()->json([
-                'message' => 'Terjadi kesalahan saat memproses pesanan.',
-                'error' => $e->getMessage()
+                'message' => 'Pesanan berhasil disimpan.',
+                'pesanan' => $pesanan->load('details'),
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Gagal menyimpan pesanan.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-    public function index(Request $request)
-    {
-        // Mendapatkan parameter halaman dari request (default 10 item per halaman)
-        $perPage = $request->get('per_page', 10); // default 10
-
-        $pesanan = Pesanan::paginate($perPage); // Menggunakan pagination
-
-        return response()->json([
-            'message' => 'Daftar pesanan',
-            'data' => $pesanan
-        ]);
-    }
 
 
     public function destroy($id)
@@ -160,5 +154,17 @@ class PesananController extends Controller
             'data' => $pesanan
         ]);
     }
+
+    public function show($id)
+{
+    $pesanan = Pesanan::find($id);
+
+    if (!$pesanan) {
+        return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+    }
+
+    return response()->json($pesanan);
+}
+
 
 }

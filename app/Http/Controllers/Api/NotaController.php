@@ -18,8 +18,9 @@ class NotaController extends Controller
 
         // Hitung total harga keseluruhan
         $totalHarga = $pesanan->details->sum(function ($item) {
-            return $item->price * $item->quantity;
+            return $item->harga_satuan * $item->jumlah;
         });
+
 
         return response()->json([
             'pesanan_id' => $pesanan->id,
@@ -29,10 +30,10 @@ class NotaController extends Controller
             'details' => $pesanan->details->map(function ($item) {
                 return [
                     'nama_barang' => $item->nama_barang,
-                    'jumlah' => $item->quantity,
+                    'jumlah' => $item->jumlah,
                     'satuan' => $item->unit,
-                    'harga_satuan' => $item->price,
-                    'total_harga' => $item->price * $item->quantity,
+                    'harga_satuan' => $item->harga_satuan,
+                    'total_harga' => $item->harga_satuan * $item->jumlah,
                 ];
             }),
             'total_harga_semua' => $totalHarga,

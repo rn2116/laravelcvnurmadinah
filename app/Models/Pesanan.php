@@ -10,15 +10,17 @@ class Pesanan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nama_toko', 'alamat', 'no_hp', 'orders', 'status', 'total_harga',
-    ];
+    'nama_toko', 'alamat', 'no_hp', 'orders'
+];
+
 
     // Mengatur format tanggal jika diperlukan
     protected $dates = ['created_at', 'updated_at'];
 
     public function details()
-    {
-        return $this->hasMany(PesananDetail::class, 'pesanan_id');
-    }
+{
+    return $this->hasMany(PesananDetail::class, 'pesanan_id');
+}
+
 
 }
