@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Pesanan;
 use App\Models\Barang;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 class PesananController extends Controller
@@ -36,6 +39,7 @@ class PesananController extends Controller
 
         try {
             $pesanan = Pesanan::create([
+                'user_id' => $request->user()->id,
                 'nama_toko' => $validated['nama_toko'],
                 'alamat' => $validated['alamat'],
                 'no_hp' => $validated['no_hp'],
@@ -156,15 +160,37 @@ class PesananController extends Controller
     }
 
     public function show($id)
-{
-    $pesanan = Pesanan::find($id);
+    {
+        $pesanan = Pesanan::find($id);
 
-    if (!$pesanan) {
-        return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+        if (!$pesanan) {
+            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+        }
+
+        return response()->json($pesanan);
+    }
+   
+  public function getMyOrders(Request $request)
+{
+    $user = $request->user();
+
+    Log::info('User ID:', ['id' => $user->id]);
+
+    $pesanan = Pesanan::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+
+    Log::info('Jumlah pesanan ditemukan:', ['count' => $pesanan->count()]);
+
+    if ($pesanan->isEmpty()) {
+        return response()->json([
+            'message' => 'Belum ada pesanan yang dilakukan',
+            'data' => []
+        ]);
     }
 
     return response()->json($pesanan);
 }
+
+
 
 
 }

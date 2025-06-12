@@ -10,7 +10,7 @@ class Pesanan extends Model
     use HasFactory;
 
     protected $fillable = [
-    'nama_toko', 'alamat', 'no_hp', 'orders'
+    'user_id','nama_toko', 'alamat', 'no_hp', 'orders'
 ];
 
 
